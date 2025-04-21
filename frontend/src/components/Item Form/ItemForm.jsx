@@ -3,7 +3,6 @@ import "./itemform.css";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { useNavigate } from "react-router-dom";
 
 const ItemForm = ({ onSubmit, initialData, onClose }) => {
   const [formData, setFormData] = useState({
@@ -26,7 +25,11 @@ const ItemForm = ({ onSubmit, initialData, onClose }) => {
     store_location: initialData?.store_location || "",
     cabinet: initialData?.cabinet || "",
     row: initialData?.row || "",
-    extra_fields: initialData?.extra_fields ? JSON.parse(initialData.extra_fields) : [], // Parse JSON string into array
+    extra_fields: initialData?.extra_fields
+      ? typeof initialData.extra_fields === "string"
+        ? JSON.parse(initialData.extra_fields)
+        : initialData.extra_fields
+      : [],
   });
 
   const [categories, setCategories] = useState([]);
@@ -37,13 +40,12 @@ const ItemForm = ({ onSubmit, initialData, onClose }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [categoriesRes, unitTypesRes, suppliersRes, storesRes] =
-          await Promise.all([
-            axios.get("http://127.0.0.1:8000/api/categories"),
-            axios.get("http://127.0.0.1:8000/api/units"),
-            axios.get("http://127.0.0.1:8000/api/suppliers"),
-            axios.get("http://127.0.0.1:8000/api/store-locations"),
-          ]);
+        const [categoriesRes, unitTypesRes, suppliersRes, storesRes] = await Promise.all([
+          axios.get("http://127.0.0.1:8000/api/categories"),
+          axios.get("http://127.0.0.1:8000/api/units"),
+          axios.get("http://127.0.0.1:8000/api/suppliers"),
+          axios.get("http://127.0.0.1:8000/api/store-locations"),
+        ]);
 
         setCategories(categoriesRes.data);
         setUnitTypes(unitTypesRes.data);
@@ -51,6 +53,7 @@ const ItemForm = ({ onSubmit, initialData, onClose }) => {
         setStores(storesRes.data);
       } catch (error) {
         console.error("Error fetching data:", error);
+        toast.error("Error fetching form data: " + error.message);
       }
     };
 
@@ -61,7 +64,6 @@ const ItemForm = ({ onSubmit, initialData, onClose }) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({ ...prevData, [name]: value }));
 
-    // Automatically calculate opening stock value
     if (name === "opening_stock_quantity" || name === "buying_cost") {
       const opening_stock_value =
         (parseFloat(formData.opening_stock_quantity) || 0) *
@@ -88,45 +90,35 @@ const ItemForm = ({ onSubmit, initialData, onClose }) => {
   };
 
   const removeExtraField = (index) => {
-    const updatedExtraFields = formData.extra_fields.filter(
-      (_, i) => i !== index
-    );
+    const updatedExtraFields = formData.extra_fields.filter((_, i) => i !== index);
     setFormData({ ...formData, extra_fields: updatedExtraFields });
   };
 
-  const handleEditItem = (item) => {
-    if (item && item.id) {
-      setSelectedItem(item);
-      setShowForm(true);
-    } else {
-      console.error("Selected item does not have an ID:", item);
-    }
-  };
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (initialData && !initialData.id) {
+    if (initialData && !initialData.product_id) {
       toast.error("Invalid product ID. Cannot update product.");
       return;
     }
 
     const itemData = {
       ...formData,
-      extra_fields: JSON.stringify(formData.extra_fields || []), // Ensure it's a valid JSON string
+      buying_cost: parseFloat(formData.buying_cost) || 0,
+      sales_price: parseFloat(formData.sales_price) || 0,
+      minimum_price: parseFloat(formData.minimum_price) || 0,
+      wholesale_price: parseFloat(formData.wholesale_price) || 0,
+      mrp: parseFloat(formData.mrp) || 0,
+      minimum_stock_quantity: parseInt(formData.minimum_stock_quantity) || 0,
+      opening_stock_quantity: parseInt(formData.opening_stock_quantity) || 0,
+      opening_stock_value: parseFloat(formData.opening_stock_value) || 0,
+      extra_fields: JSON.stringify(formData.extra_fields || []),
     };
 
-    console.log("Sending data to backend:", itemData); // Debug: Log the payload
+    console.log("Sending data to backend:", itemData);
 
     try {
-      if (initialData) {
-        await axios.put(`http://127.0.0.1:8000/api/products/${initialData.id}`, itemData);
-        toast.success("Product updated successfully!");
-      } else {
-        await axios.post("http://127.0.0.1:8000/api/products", itemData);
-        toast.success("Product added successfully!");
-      }
-
-      // Reset form and close
+      onSubmit(itemData);
       setFormData({
         product_name: "",
         item_code: "",
@@ -147,30 +139,18 @@ const ItemForm = ({ onSubmit, initialData, onClose }) => {
         store_location: "",
         cabinet: "",
         row: "",
-        extra_fields: [], // Reset extra fields to an empty array
+        extra_fields: [],
       });
-
       onClose();
     } catch (error) {
       console.error("Error saving product:", error);
-      console.error("Backend response:", error.response?.data); // Debug: Log the backend response
-      if (error.response?.data?.errors) {
-        Object.values(error.response.data.errors).forEach((err) => {
-          toast.error(err[0]);
-        });
-      } else {
-        toast.error(error.response?.data?.message || "Failed to save product. Please try again.");
-      }
+      toast.error(error.response?.data?.message || "Failed to save product. Please try again.");
     }
   };
 
   const handleClose = (e) => {
     e.preventDefault();
-    if (
-      window.confirm(
-        "Are you sure you want to close? Any unsaved changes will be lost."
-      )
-    ) {
+    if (window.confirm("Are you sure you want to close? Any unsaved changes will be lost.")) {
       onClose();
     }
   };
@@ -179,7 +159,6 @@ const ItemForm = ({ onSubmit, initialData, onClose }) => {
     setFormData((prevData) => {
       const updatedData = { ...prevData };
 
-      // Generate code and barcode if empty
       if (fieldName === "item_code" && !updatedData.item_code) {
         updatedData.item_code = `ITM ${Math.floor(1000 + Math.random() * 9000)}`;
       }
@@ -188,11 +167,7 @@ const ItemForm = ({ onSubmit, initialData, onClose }) => {
         updatedData.barcode = `BAR ${Math.floor(1000 + Math.random() * 9000)}`;
       }
 
-      // Update opening stock value dynamically
-      if (
-        fieldName === "opening_stock_quantity" ||
-        fieldName === "buying_cost"
-      ) {
+      if (fieldName === "opening_stock_quantity" || fieldName === "buying_cost") {
         const openingStockValue =
           (parseFloat(updatedData.opening_stock_quantity) || 0) *
           (parseFloat(updatedData.buying_cost) || 0);
@@ -233,7 +208,6 @@ const ItemForm = ({ onSubmit, initialData, onClose }) => {
         </div>
 
         <div className="grid grid-cols-1 gap-6 mt-6 sm:grid-cols-2 lg:grid-cols-3">
-          {/* Product Name */}
           <div>
             <label className="block text-sm font-medium text-gray-800 dark:text-white">
               Product Name <span className="item-form-required">*</span>
@@ -250,7 +224,6 @@ const ItemForm = ({ onSubmit, initialData, onClose }) => {
             />
           </div>
 
-          {/* Item Code */}
           <div>
             <label className="block text-sm font-medium text-gray-800 dark:text-white">
               Item Code <span className="item-form-required">*</span>
@@ -260,7 +233,7 @@ const ItemForm = ({ onSubmit, initialData, onClose }) => {
               name="item_code"
               value={formData.item_code}
               onChange={handleChange}
-              onBlur={() => handleBlur("item_code")} // Generate code on blur
+              onBlur={() => handleBlur("item_code")}
               onKeyDown={(e) => handleKeyDown(e, "batch_number")}
               className="block w-full mt-1 rounded-md item-form-input"
               placeholder="Enter item code"
@@ -268,7 +241,6 @@ const ItemForm = ({ onSubmit, initialData, onClose }) => {
             />
           </div>
 
-          {/* Batch Number */}
           <div>
             <label className="block text-sm font-medium text-gray-800 dark:text-white">
               Batch Number *
@@ -285,7 +257,6 @@ const ItemForm = ({ onSubmit, initialData, onClose }) => {
             />
           </div>
 
-          {/* Expiry Date */}
           <div>
             <label className="block text-sm font-medium text-gray-800 dark:text-white">
               Expiry Date
@@ -300,7 +271,6 @@ const ItemForm = ({ onSubmit, initialData, onClose }) => {
             />
           </div>
 
-          {/* Buying Cost */}
           <div>
             <label className="block text-sm font-medium text-gray-800 dark:text-white">
               Buying Cost
@@ -311,13 +281,12 @@ const ItemForm = ({ onSubmit, initialData, onClose }) => {
               value={formData.buying_cost}
               onChange={handleChange}
               onKeyDown={(e) => handleKeyDown(e, "sales_price")}
-              onBlur={() => handleBlur("buying_cost")} // Calculate stock value
+              onBlur={() => handleBlur("buying_cost")}
               className="block w-full mt-1 rounded-md item-form-input"
               placeholder="Enter buying cost"
             />
           </div>
 
-          {/* Sales Price */}
           <div>
             <label className="block text-sm font-medium text-gray-800 dark:text-white">
               Sales Price *
@@ -334,7 +303,6 @@ const ItemForm = ({ onSubmit, initialData, onClose }) => {
             />
           </div>
 
-          {/* Wholesale Price */}
           <div>
             <label className="block text-sm font-medium text-gray-800 dark:text-white">
               Wholesale Price
@@ -350,7 +318,6 @@ const ItemForm = ({ onSubmit, initialData, onClose }) => {
             />
           </div>
 
-          {/* Minimum Price */}
           <div>
             <label className="block text-sm font-medium text-gray-800 dark:text-white">
               Minimum Price
@@ -366,7 +333,6 @@ const ItemForm = ({ onSubmit, initialData, onClose }) => {
             />
           </div>
 
-          {/* Barcode */}
           <div>
             <label className="block text-sm font-medium text-gray-800 dark:text-white">
               Barcode <span className="item-form-required">*</span>
@@ -376,7 +342,7 @@ const ItemForm = ({ onSubmit, initialData, onClose }) => {
               name="barcode"
               value={formData.barcode}
               onChange={handleChange}
-              onBlur={() => handleBlur("barcode")} // Generate barcode on blur
+              onBlur={() => handleBlur("barcode")}
               onKeyDown={(e) => handleKeyDown(e, "mrp")}
               className="block w-full mt-1 rounded-md item-form-input"
               placeholder="Enter barcode"
@@ -384,7 +350,6 @@ const ItemForm = ({ onSubmit, initialData, onClose }) => {
             />
           </div>
 
-          {/* MRP */}
           <div>
             <label className="block text-sm font-medium text-gray-800 dark:text-white">
               MRP *
@@ -401,7 +366,6 @@ const ItemForm = ({ onSubmit, initialData, onClose }) => {
             />
           </div>
 
-          {/* Minimum Stock Quantity */}
           <div>
             <label className="block text-sm font-medium text-gray-800 dark:text-white">
               Minimum Stock Quantity
@@ -417,7 +381,6 @@ const ItemForm = ({ onSubmit, initialData, onClose }) => {
             />
           </div>
 
-          {/* Opening Stock Quantity */}
           <div>
             <label className="block text-sm font-medium text-gray-800 dark:text-white">
               Opening Stock Quantity
@@ -428,13 +391,12 @@ const ItemForm = ({ onSubmit, initialData, onClose }) => {
               value={formData.opening_stock_quantity}
               onChange={handleChange}
               onKeyDown={(e) => handleKeyDown(e, "opening_stock_value")}
-              onBlur={() => handleBlur("opening_stock_quantity")} // Calculate stock value
+              onBlur={() => handleBlur("opening_stock_quantity")}
               className="block w-full mt-1 rounded-md item-form-input"
               placeholder="Enter opening stock quantity"
             />
           </div>
 
-          {/* Opening Stock Value */}
           <div>
             <label className="block text-sm font-medium text-gray-800 dark:text-white">
               Opening Stock Value
@@ -450,7 +412,6 @@ const ItemForm = ({ onSubmit, initialData, onClose }) => {
             />
           </div>
 
-          {/* Category */}
           <div>
             <label className="block text-sm font-medium text-gray-800 dark:text-white">
               Category
@@ -471,7 +432,6 @@ const ItemForm = ({ onSubmit, initialData, onClose }) => {
             </select>
           </div>
 
-          {/* Supplier */}
           <div>
             <label className="block text-sm font-medium text-gray-800 dark:text-white">
               Supplier
@@ -492,7 +452,6 @@ const ItemForm = ({ onSubmit, initialData, onClose }) => {
             </select>
           </div>
 
-          {/* Unit Type */}
           <div>
             <label className="block text-sm font-medium text-gray-800 dark:text-white">
               Unit Type
@@ -513,7 +472,6 @@ const ItemForm = ({ onSubmit, initialData, onClose }) => {
             </select>
           </div>
 
-          {/* Store Location */}
           <div>
             <label className="block text-sm font-medium text-gray-800 dark:text-white">
               Store Location
@@ -534,7 +492,6 @@ const ItemForm = ({ onSubmit, initialData, onClose }) => {
             </select>
           </div>
 
-          {/* Cabinet */}
           <div>
             <label className="block text-sm font-medium text-gray-800 dark:text-white">
               Cabinet
@@ -550,7 +507,6 @@ const ItemForm = ({ onSubmit, initialData, onClose }) => {
             />
           </div>
 
-          {/* Row */}
           <div>
             <label className="block text-sm font-medium text-gray-800 dark:text-white">
               Row
@@ -566,7 +522,6 @@ const ItemForm = ({ onSubmit, initialData, onClose }) => {
           </div>
         </div>
 
-        {/* Extra Fields */}
         {formData.extra_fields?.map((field, index) => (
           <div key={index} className="mb-4">
             <div className="flex items-center pt-10 mb-2 space-x-2">
@@ -606,7 +561,6 @@ const ItemForm = ({ onSubmit, initialData, onClose }) => {
           </div>
         ))}
 
-        {/* Submit and Cancel Buttons */}
         <div className="flex justify-end mt-6 space-x-4">
           <button
             className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
@@ -625,7 +579,6 @@ const ItemForm = ({ onSubmit, initialData, onClose }) => {
           </button>
           <button
             type="submit"
-            onClick={handleSubmit}
             className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
           >
             Save Product
