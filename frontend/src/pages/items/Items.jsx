@@ -8,11 +8,10 @@ import "react-toastify/dist/ReactToastify.css";
 import ItemForm from "../../components/item Form/ItemForm";
 import ProductDetailsModal from "./ProductDetailsModal";
 import ConfirmationModal from "./ConfirmationModal";
-import { useAuth } from "../../context/NewAuthContext"; // Import your auth context
-
+import { useAuth } from "../../context/NewAuthContext";
 
 const Items = () => {
-  const { currentUser } = useAuth(); // Get current user from auth context
+  const { currentUser } = useAuth();
   const [showForm, setShowForm] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -46,7 +45,6 @@ const Items = () => {
     } catch (error) {
       if (error.response?.status === 401) {
         toast.error("Session expired. Please login again.");
-        // You might want to redirect to login here
       } else {
         toast.error("Error fetching items: " + error.message);
       }
@@ -54,7 +52,6 @@ const Items = () => {
       setLoading(false);
     }
   };
-
 
   useEffect(() => {
     if (Array.isArray(items)) {
@@ -111,19 +108,22 @@ const Items = () => {
     XLSX.utils.book_append_sheet(workbook, worksheet, "Items");
     XLSX.writeFile(workbook, "items_list.xlsx");
   };
+
   const handleEditItem = (item) => {
     if (item && item.product_id) {
       setSelectedItem(item);
       setShowForm(true);
     } else {
-      console.error("Selected item does not have an ID:", item);
+      console.error("Selected item does not have a product_id:", item);
+      toast.error("Invalid item selected for editing.");
     }
   };
 
   const handleAddItem = async (newItem) => {
     try {
+      console.log("Sending update data:", newItem);
       const response = selectedItem
-        ? await api.put(`/products/${selectedItem.id}`, newItem)
+        ? await api.put(`/products/${selectedItem.product_id}`, newItem)
         : await api.post("/products", newItem);
 
       toast.success(response.data.message);
@@ -131,7 +131,9 @@ const Items = () => {
       setSelectedItem(null);
       fetchItems();
     } catch (error) {
-      toast.error("Error saving item: " + error.message);
+      console.error("Error saving item:", error);
+      console.error("Response data:", error.response?.data);
+      toast.error("Error saving item: " + (error.response?.data?.message || error.message));
     }
   };
 
@@ -144,22 +146,30 @@ const Items = () => {
       toast.error("Error deleting item: " + error.message);
     } finally {
       setShowDeleteModal(false);
+      setSelectedItem(null);
     }
   };
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   const totalItems = filteredItems.length;
-  const totalOpeningQty = filteredItems.reduce((sum, item) => sum + item.opening_stock_quantity, 0);
-  const totalOpeningCost = filteredItems.reduce((sum, item) => sum + (item.opening_stock_quantity * item.buying_cost), 0);
-  const totalSellingPrice = filteredItems.reduce((sum, item) => sum + (item.opening_stock_quantity * item.sales_price), 0);
+  const totalOpeningQty = filteredItems.reduce((sum, item) => sum + (item.opening_stock_quantity || 0), 0);
+  const totalOpeningCost = filteredItems.reduce(
+    (sum, item) => sum + ((item.opening_stock_quantity || 0) * (item.buying_cost || 0)),
+    0
+  );
+  const totalSellingPrice = filteredItems.reduce(
+    (sum, item) => sum + ((item.opening_stock_quantity || 0) * (item.sales_price || 0)),
+    0
+  );
   const profitMargin = totalSellingPrice - totalOpeningCost;
-  const profitMarginPercentage = ((profitMargin / totalOpeningCost) * 100).toFixed(2);
+  const profitMarginPercentage = totalOpeningCost
+    ? ((profitMargin / totalOpeningCost) * 100).toFixed(2)
+    : 0;
 
   const formatNumber = (number) => {
     return number.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
-
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -167,7 +177,7 @@ const Items = () => {
       <div className="flex items-center justify-between">
         <button
           onClick={() => {
-            setSelectedItem(null); // Reset selected item when adding a new item
+            setSelectedItem(null);
             setShowForm(true);
           }}
           className="flex items-center gap-2 px-6 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
@@ -193,7 +203,7 @@ const Items = () => {
             id="fileInput"
           />
           <button
-            onClick={() => document.getElementById('fileInput').click()}
+            onClick={() => document.getElementById("fileInput").click()}
             className="flex items-center gap-2 px-6 py-2 text-white bg-green-600 rounded-lg cursor-pointer hover:bg-green-700"
           >
             Select Excel File
@@ -201,8 +211,9 @@ const Items = () => {
           <button
             onClick={handleImport}
             disabled={!selectedFile}
-            className={`flex items-center gap-2 px-6 py-2 text-white rounded-lg ${selectedFile ? "bg-green-600 hover:bg-green-700" : "bg-gray-400 cursor-not-allowed"
-              }`}
+            className={`flex items-center gap-2 px-6 py-2 text-white rounded-lg ${
+              selectedFile ? "bg-green-600 hover:bg-green-700" : "bg-gray-400 cursor-not-allowed"
+            }`}
           >
             Import Selected File
           </button>
@@ -217,16 +228,16 @@ const Items = () => {
 
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="w-full max-w-lg bg-white rounded-lg shadow-lg p-6">
+          <div className="w-full max-w-lg p-6 bg-white rounded-lg shadow-lg">
             <h2 className="text-xl font-semibold text-gray-900">
               {selectedItem ? "Edit Item" : "Add New Item"}
             </h2>
             <ItemForm
               onSubmit={handleAddItem}
-              initialData={selectedItem} // Pass selected item data to the form
+              initialData={selectedItem}
               onClose={() => {
                 setShowForm(false);
-                setSelectedItem(null); // Reset selected item when closing the form
+                setSelectedItem(null);
               }}
             />
           </div>
@@ -251,7 +262,7 @@ const Items = () => {
 
       <div className="overflow-x-auto border rounded-lg">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-700 text-white sticky top-0">
+          <thead className="sticky top-0 text-white bg-gray-700">
             <tr>
               <th className="p-2 text-xs text-center uppercase">No</th>
               <th className="p-2 text-xs text-center uppercase">Name</th>
@@ -274,20 +285,22 @@ const Items = () => {
               filteredItems
                 .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
                 .map((item, index) => (
-                  <tr key={item.id} className="hover:bg-gray-500 hover:text-emerald-300">
-                    <td className="px-4 py-2 text-xs text-center">{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                  <tr key={item.product_id} className="hover:bg-gray-500 hover:text-emerald-300">
+                    <td className="px-4 py-2 text-xs text-center">
+                      {(currentPage - 1) * itemsPerPage + index + 1}
+                    </td>
                     <td className="px-4 py-2 text-xs text-left">{item.product_name}</td>
                     <td className="px-4 py-2 text-xs text-center">{item.category}</td>
                     <td className="px-4 py-2 text-xs text-right">LKR {formatNumber(item.buying_cost)}</td>
                     <td className="px-4 py-2 text-xs text-right">LKR {formatNumber(item.sales_price)}</td>
-                    <td className="px-4 py-2 text-xs text-right">{(item.opening_stock_quantity)}</td>
+                    <td className="px-4 py-2 text-xs text-right">{item.opening_stock_quantity}</td>
                     <td className="px-4 py-2 text-xs text-right">
                       LKR {formatNumber(item.opening_stock_quantity * item.buying_cost)}
                     </td>
                     <td className="flex justify-center gap-2 p-2">
                       <button
                         onClick={() => {
-                          setSelectedItem(item.product_id);
+                          setSelectedItem(item);
                           setShowDetailsModal(true);
                         }}
                         className="text-blue-600 hover:text-blue-900"
@@ -295,7 +308,7 @@ const Items = () => {
                         <Eye className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleEditItem(item)} // Trigger edit functionality
+                        onClick={() => handleEditItem(item)}
                         className="text-green-600 hover:text-green-900"
                       >
                         <FiEdit className="w-4 h-4" />
@@ -328,36 +341,35 @@ const Items = () => {
           <button
             key={i + 1}
             onClick={() => paginate(i + 1)}
-            className={`px-4 py-2 ${currentPage === i + 1 ? "bg-blue-600 text-white" : "bg-gray-200"
-              } rounded-lg`}
+            className={`px-4 py-2 ${currentPage === i + 1 ? "bg-blue-600 text-white" : "bg-gray-200"} rounded-lg`}
           >
             {i + 1}
           </button>
         ))}
       </div>
 
-      <div className="bg-transparent rounded-lg shadow-lg text-center p-4 mt-4">
-        <h2 className="text-xl font-bold mb-4">Summary</h2>
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <div className="bg-cyan-800 p-4 rounded-lg">
+      <div className="p-4 mt-4 text-center bg-transparent rounded-lg shadow-lg">
+        <h2 className="mb-4 text-xl font-bold">Summary</h2>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
+          <div className="p-4 rounded-lg bg-cyan-800">
             <p className="text-sm text-cyan-500">Total Items</p>
-            <p className="text-2xl text-cyan-300 font-bold">{totalItems}</p>
+            <p className="text-2xl font-bold text-cyan-300">{totalItems}</p>
           </div>
-          <div className="bg-rose-800 p-4 rounded-lg">
+          <div className="p-4 rounded-lg bg-rose-800">
             <p className="text-sm text-pink-500">Total Opening Qty</p>
-            <p className="text-2xl text-pink-300 font-bold">{totalOpeningQty}</p>
+            <p className="text-2xl font-bold text-pink-300">{totalOpeningQty}</p>
           </div>
-          <div className="bg-lime-800 p-4 rounded-lg">
+          <div className="p-4 rounded-lg bg-lime-800">
             <p className="text-sm text-lime-500">Total Opening Cost</p>
-            <p className="text-2xl text-lime-300 font-bold">LKR {formatNumber(totalOpeningCost)}</p>
+            <p className="text-2xl font-bold text-lime-300">LKR {formatNumber(totalOpeningCost)}</p>
           </div>
-          <div className="bg-fuchsia-800 p-4 rounded-lg">
+          <div className="p-4 rounded-lg bg-fuchsia-800">
             <p className="text-sm text-fuchsia-500">Total Selling Price</p>
-            <p className="text-2xl text-fuchsia-300 font-bold">LKR {formatNumber(totalSellingPrice)}</p>
+            <p className="text-2xl font-bold text-fuchsia-300">LKR {formatNumber(totalSellingPrice)}</p>
           </div>
-          <div className="bg-purple-800 p-4 rounded-lg">
+          <div className="p-4 bg-purple-800 rounded-lg">
             <p className="text-sm text-purple-500">Profit Margin</p>
-            <p className="text-2xl text-purple-300 font-bold">{profitMarginPercentage}%</p>
+            <p className="text-2xl font-bold text-purple-300">{profitMarginPercentage}%</p>
           </div>
         </div>
       </div>
