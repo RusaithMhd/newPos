@@ -1,6 +1,5 @@
 // src/pages/purchasing/PurchasingEntryForm.jsx
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import {
   FiSearch,
   FiRefreshCw,
@@ -9,16 +8,18 @@ import {
 } from "react-icons/fi";
 import { FaFilter, FaFileExcel } from "react-icons/fa";
 import * as XLSX from "xlsx";
+import { toast } from "react-toastify";
 import PurchaseInvoiceForm from "./PurchaseInvoiceForm";
+import { getApi, postData, putData, deleteData } from "../../services/api";
+import { useAuth } from "../../context/NewAuthContext";
 
 const PurchasingEntryForm = () => {
-  // Date range setup
+  const { user } = useAuth();
   const today = new Date().toISOString().split("T")[0];
   const oneMonthAgo = new Date();
   oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
   const lastMonth = oneMonthAgo.toISOString().split("T")[0];
 
-  // State for UI and data
   const [purchasedItems, setPurchasedItems] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [stores, setStores] = useState([]);
@@ -35,64 +36,167 @@ const PurchasingEntryForm = () => {
   const [toDate, setToDate] = useState(today);
   const [expandedRow, setExpandedRow] = useState(null);
 
-  // Fetch data on component mount
   useEffect(() => {
-    fetchData();
-  }, [fromDate, toDate]);
+    if (user?.token) {
+      fetchData();
+    } else {
+      setNotification("Please login to access purchase entries");
+      toast.error("Please login to access purchase entries");
+    }
+  }, [user, fromDate, toDate]);
 
   const fetchData = async () => {
     setLoading(true);
     try {
+      const timestamp = new Date().getTime();
       const [suppliersRes, storesRes, itemsRes, purchasesRes] =
         await Promise.all([
-          axios.get("/api/suppliers"),
-          axios.get("/api/store-locations"),
-          axios.get("/api/products"),
-          axios.get("/api/purchases", { params: { fromDate, toDate } }),
+          getApi()
+            .get(`/suppliers?_t=${timestamp}`)
+            .catch((err) => {
+              console.error(
+                "Suppliers fetch error:",
+                err.response?.data || err.message
+              );
+              toast.error(
+                "Failed to fetch suppliers: " +
+                  (err.response?.data?.message || err.message)
+              );
+              return { data: [] };
+            }),
+          getApi()
+            .get(`/store-locations?_t=${timestamp}`)
+            .catch((err) => {
+              console.error(
+                "Stores fetch error:",
+                err.response?.data || err.message
+              );
+              toast.error(
+                "Failed to fetch stores: " +
+                  (err.response?.data?.message || err.message)
+              );
+              return { data: [] };
+            }),
+          getApi()
+            .get(`/products?_t=${timestamp}`)
+            .catch((err) => {
+              console.error(
+                "Products fetch error:",
+                err.response?.data || err.message
+              );
+              toast.error(
+                "Failed to fetch products: " +
+                  (err.response?.data?.message || err.message)
+              );
+              return { data: [] };
+            }),
+          getApi()
+            .get(`/purchases?_t=${timestamp}`, { params: { fromDate, toDate } })
+            .catch((err) => {
+              console.error(
+                "Purchases fetch error:",
+                err.response?.data || err.message
+              );
+              toast.error(
+                "Failed to fetch purchases: " +
+                  (err.response?.data?.message || err.message)
+              );
+              return { data: { data: [] } };
+            }),
         ]);
-      setSuppliers(suppliersRes.data.data || []);
-      setStores(storesRes.data.data || []);
-      setItems(itemsRes.data.data || []);
-      // Flatten purchase items for the table
-      const purchaseItems = purchasesRes.data.data.flatMap((purchase) =>
-        purchase.items.map((item, index) => ({
-          id: `${purchase.id}-${index}`,
-          product_name:
-            itemsRes.data.data.find((i) => i.id === item.product_id)
-              ?.product_name || "Unknown",
-          quantity: item.quantity,
-          buyingCost: item.buying_cost,
-          sellingPrice: item.selling_price || 0,
-          mrp: item.mrp || 0,
-          minimumPrice: item.minimum_price || 0,
-          discountPercentage: item.discount_percentage || 0,
-          discountAmount: item.discount_amount || 0,
-          tax: item.tax || 0,
-          expiryDate: item.expiry_date || "",
-          totalPrice:
-            item.quantity * item.buying_cost -
-            (item.discount_amount || 0) +
-            (item.tax || 0),
-          purchaseId: purchase.id,
-          billNumber: purchase.bill_number,
-          invoiceNumber: purchase.invoice_number,
-          date: purchase.date_of_purchase,
-          supplier:
-            suppliersRes.data.data.find((s) => s.id === purchase.supplier_id)
-              ?.supplier_name || "Unknown",
-          supplierId: purchase.supplier_id,
-          store:
-            storesRes.data.data.find((s) => s.id === purchase.store_id)
-              ?.store_name || "Unknown",
-          storeId: purchase.store_id,
-          paymentMethod: purchase.payment_method,
-          status: purchase.status || "pending",
-        }))
+
+      // Log responses for debugging
+      console.log("API Responses:", {
+        suppliers: suppliersRes.data,
+        stores: storesRes.data,
+        items: itemsRes.data,
+        purchases: purchasesRes.data,
+      });
+
+      // Handle flexible response structures
+      const suppliersData = Array.isArray(suppliersRes.data.data)
+        ? suppliersRes.data.data
+        : Array.isArray(suppliersRes.data)
+        ? suppliersRes.data
+        : [];
+      const storesData = Array.isArray(storesRes.data.data)
+        ? storesRes.data.data
+        : Array.isArray(storesRes.data)
+        ? storesRes.data
+        : [];
+      const itemsData = Array.isArray(itemsRes.data.data)
+        ? itemsRes.data.data
+        : Array.isArray(itemsRes.data)
+        ? itemsRes.data
+        : [];
+      const purchasesData = Array.isArray(purchasesRes.data.data)
+        ? purchasesRes.data.data
+        : Array.isArray(purchasesRes.data)
+        ? purchasesRes.data
+        : [];
+
+      setSuppliers(suppliersData);
+      setStores(storesData);
+      setItems(itemsData);
+
+      if (suppliersData.length === 0) toast.warn("No suppliers available");
+      if (storesData.length === 0) toast.warn("No stores available");
+      if (itemsData.length === 0) toast.warn("No products available");
+
+      // Map purchases to table format
+      const purchaseItems = purchasesData.flatMap((purchase, purchaseIndex) =>
+        (purchase.items || []).map((item, index) => {
+          const product =
+            itemsData.find((i) => i.product_id === item.product_id) || {};
+          // Use supplier/store from purchase response if available, else fallback to suppliersData/storesData
+          const supplier =
+            purchase.supplier?.supplier_name ||
+            suppliersData.find((s) => s.id === purchase.supplier_id)
+              ?.supplier_name ||
+            "Unknown";
+          const store =
+            purchase.store?.store_name ||
+            storesData.find((s) => s.id === purchase.store_id)?.store_name ||
+            "Unknown";
+
+          return {
+            id: `${purchase.id}-${index}`,
+            product_name: product.product_name || "Unknown",
+            quantity: item.quantity || 0,
+            buyingCost: item.buying_cost || 0,
+            sellingPrice: item.selling_price || 0,
+            mrp: item.mrp || 0,
+            minimumPrice: item.minimum_price || 0,
+            discountPercentage: item.discount_percentage || 0,
+            discountAmount: item.discount_amount || 0,
+            tax: item.tax || 0,
+            expiryDate: item.expiry_date || "",
+            totalPrice:
+              (item.quantity || 0) * (item.buying_cost || 0) -
+              (item.discount_amount || 0) +
+              (item.tax || 0),
+            purchaseId: purchase.id,
+            billNumber: purchase.bill_number || "",
+            invoiceNumber: purchase.invoice_number || "",
+            date: purchase.date_of_purchase || "",
+            supplier,
+            supplierId: purchase.supplier_id || null,
+            store,
+            storeId: purchase.store_id || null,
+            paymentMethod: purchase.payment_method || "",
+            status: purchase.status || "pending",
+          };
+        })
       );
+
+      console.log("Mapped purchaseItems:", purchaseItems);
       setPurchasedItems(purchaseItems);
     } catch (error) {
       setNotification("Error fetching data: " + error.message);
       console.error("Error fetching data:", error);
+      if (error.response?.status === 401) {
+        toast.error("Session expired. Please login again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -115,7 +219,7 @@ const PurchasingEntryForm = () => {
   // Calculate totals
   const calculateTotals = () => {
     const subtotal = purchasedItems.reduce(
-      (acc, item) => acc + item.quantity * item.buyingCost,
+      (acc, item) => acc + (item.quantity * item.buyingCost || 0),
       0
     );
     const totalDiscount = purchasedItems.reduce(
@@ -170,10 +274,10 @@ const PurchasingEntryForm = () => {
       .map((i) => ({
         id: i.id.split("-")[1],
         productId: items.find((prod) => prod.product_name === i.product_name)
-          ?.id,
+          ?.product_id,
         description: i.product_name,
         quantity: i.quantity,
-        freeItems: 0, // Assuming freeItems not stored in API
+        freeItems: 0,
         buyingCost: i.buyingCost,
         discountPercentage: i.discountPercentage,
         discountAmount: i.discountAmount,
@@ -205,15 +309,15 @@ const PurchasingEntryForm = () => {
   const updateItem = async (e) => {
     e.preventDefault();
     const totalPrice =
-      editingItem.quantity * parseFloat(editingItem.buyingCost || 0) -
-      parseFloat(editingItem.discountAmount || 0) +
-      parseFloat(editingItem.tax || 0);
+      (editingItem.quantity || 0) * (parseFloat(editingItem.buyingCost) || 0) -
+      (parseFloat(editingItem.discountAmount) || 0) +
+      (parseFloat(editingItem.tax) || 0);
     const updatedItem = { ...editingItem, totalPrice };
 
     try {
       setLoading(true);
-      await axios.put(
-        `/api/purchases/${updatedItem.purchaseId}/items/${updatedItem.id}`,
+      await putData(
+        `/purchases/${updatedItem.purchaseId}/items/${updatedItem.id}`,
         updatedItem
       );
       setPurchasedItems(
@@ -222,8 +326,10 @@ const PurchasingEntryForm = () => {
         )
       );
       setNotification("Item updated successfully!");
+      toast.success("Item updated successfully!");
     } catch (error) {
       setNotification("Error updating item: " + error.message);
+      toast.error("Error updating item: " + error.message);
       console.error("Error updating item:", error);
     } finally {
       setLoading(false);
@@ -251,23 +357,25 @@ const PurchasingEntryForm = () => {
           tax: item.tax,
         })),
         total: newInvoice.total,
+        paid_amount: newInvoice.paidAmount || 0,
         status: newInvoice.status || "pending",
       };
 
       if (newInvoice.id) {
-        // Update existing invoice
-        await axios.put(`/api/purchases/${newInvoice.id}`, invoiceData);
+        await putData(`/purchases/${newInvoice.id}`, invoiceData);
         setNotification("Purchase invoice updated successfully!");
+        toast.success("Purchase invoice updated successfully!");
       } else {
-        // Create new invoice
-        await axios.post("/api/purchases", invoiceData);
+        await postData("/purchases", invoiceData);
         setNotification("Purchase invoice recorded successfully!");
+        toast.success("Purchase invoice recorded successfully!");
       }
       fetchData();
       setIsInvoiceFormOpen(false);
       setEditingInvoice(null);
     } catch (error) {
       setNotification("Error recording purchase invoice: " + error.message);
+      toast.error("Error recording purchase invoice: " + error.message);
       console.error("Error recording purchase:", error);
     } finally {
       setLoading(false);
@@ -278,13 +386,15 @@ const PurchasingEntryForm = () => {
   const deleteInvoice = async (purchaseId) => {
     try {
       setLoading(true);
-      await axios.delete(`/api/purchases/${purchaseId}`);
+      await deleteData(`/purchases/${purchaseId}`);
       setPurchasedItems(
         purchasedItems.filter((item) => item.purchaseId !== purchaseId)
       );
       setNotification("Purchase invoice deleted successfully!");
+      toast.success("Purchase invoice deleted successfully!");
     } catch (error) {
       setNotification("Error deleting purchase invoice: " + error.message);
+      toast.error("Error deleting purchase invoice: " + error.message);
       console.error("Error deleting purchase:", error);
     } finally {
       setLoading(false);
@@ -305,9 +415,9 @@ const PurchasingEntryForm = () => {
     }).format(amount);
   };
 
+  // JSX remains unchanged
   return (
     <div className="p-4 min-h-screen flex flex-col bg-transparent">
-      {/* Header */}
       <div className="bg-gradient-to-r from-blue-500 to-blue-800 dark:bg-gradient-to-r dark:from-blue-900 dark:to-slate-800 text-white text-center py-3 rounded-lg shadow-md mb-6">
         <h1 className="text-2xl font-bold">PURCHASE ENTRY DASHBOARD</h1>
         <p className="text-sm opacity-90">
@@ -315,14 +425,12 @@ const PurchasingEntryForm = () => {
         </p>
       </div>
 
-      {/* Notification */}
       {notification && (
         <div className="p-2 mb-4 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded">
           {notification}
         </div>
       )}
 
-      {/* Action Bar */}
       <div className="flex flex-wrap justify-between items-center mb-6 gap-4">
         <div className="relative flex-grow max-w-md">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -365,7 +473,6 @@ const PurchasingEntryForm = () => {
         </div>
       </div>
 
-      {/* Filters Section */}
       {showFilters && (
         <div className="bg-white dark:bg-slate-800 dark:border-gray-600 dark:text-gray-300 p-4 rounded-lg shadow-md mb-6 border border-gray-200">
           <h3 className="font-medium mb-3 flex items-center gap-2">
@@ -404,7 +511,6 @@ const PurchasingEntryForm = () => {
         </div>
       )}
 
-      {/* Summary Section */}
       <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-md p-6 mb-6 border border-gray-200 dark:border-slate-700">
         <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
           Purchase Summary
@@ -445,7 +551,6 @@ const PurchasingEntryForm = () => {
         </div>
       </div>
 
-      {/* Purchased Items Table */}
       <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-md overflow-hidden border border-gray-200 dark:border-slate-700">
         {loading ? (
           <div className="flex justify-center items-center p-8">
@@ -645,7 +750,6 @@ const PurchasingEntryForm = () => {
         )}
       </div>
 
-      {/* Purchase Invoice Form Modal */}
       {isInvoiceFormOpen && (
         <PurchaseInvoiceForm
           onGenerateInvoice={handleGenerateInvoice}
@@ -657,7 +761,6 @@ const PurchasingEntryForm = () => {
         />
       )}
 
-      {/* Edit Item Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-md w-full p-6">

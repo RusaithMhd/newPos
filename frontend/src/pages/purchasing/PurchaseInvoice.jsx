@@ -1,59 +1,63 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import axios from "axios"; // Direct axios import
 import PurchaseInvoiceForm from "./PurchaseInvoiceForm";
+import { toast } from "react-toastify";
+import { useAuth } from "../../context/NewAuthContext";
 
 const PurchaseInvoice = () => {
+  const { currentUser, logout } = useAuth();
   const [invoices, setInvoices] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
-  const [notification, setNotification] = useState("");
-
-  // Optional: Add Axios interceptor for authentication
-  /*
-  axios.interceptors.request.use(config => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  });
-  */
 
   // Fetch invoices on mount
   useEffect(() => {
-    fetchInvoices();
-  }, []);
+    if (currentUser?.token) {
+      fetchInvoices();
+    } else {
+      toast.error("Please login to access invoices");
+    }
+  }, [currentUser]);
 
   const fetchInvoices = async () => {
     setLoading(true);
     try {
-      const timestamp = new Date().getTime(); // Cache-busting parameter
-      const response = await axios.get(`/api/purchases?_t=${timestamp}`, {
-        headers: {
-          "Cache-Control": "no-cache, no-store, must-revalidate",
-          Pragma: "no-cache",
-          Expires: "0",
-        },
-      });
-      // Handle apiResource response (paginated or direct array)
-      const data = response.data.data
-        ? response.data.data
-        : Array.isArray(response.data)
-        ? response.data
-        : [];
+      const timestamp = new Date().getTime(); // Cache-busting
+      const response = await axios.get(
+        `http://127.0.0.1:8000/api/purchases?_t=${timestamp}`,
+        {
+          headers: {
+            Authorization: `Bearer ${currentUser.token}`,
+            "Content-Type": "application/json",
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            Pragma: "no-cache",
+            Expires: "0",
+          },
+        }
+      );
+      const data = response.data.data || [];
       setInvoices(data);
     } catch (error) {
-      const errorMsg = error.response?.data?.message || error.message;
-      setNotification(`Error fetching invoices: ${errorMsg}`);
-      console.error("Fetch invoices error:", {
+      handleApiError(error, "Error fetching invoices");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApiError = (error, defaultMessage) => {
+    if (error.response?.status === 401) {
+      toast.error("Session expired. Please login again.");
+      logout();
+    } else {
+      const errorMsg = error.response?.data?.message || defaultMessage;
+      toast.error(errorMsg);
+      console.error(defaultMessage, {
         status: error.response?.status,
         data: error.response?.data,
         message: error.message,
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -68,7 +72,7 @@ const PurchaseInvoice = () => {
         supplier_id: parseInt(newInvoice.supplierId),
         store_id: parseInt(newInvoice.storeId),
         items: newInvoice.items.map((item) => ({
-          product_id: parseInt(item.productId), // Match products.product_id
+          product_id: parseInt(item.productId),
           quantity: parseInt(item.quantity),
           buying_cost: parseFloat(item.buyingCost),
           discount_percentage: parseFloat(item.discountPercentage) || 0,
@@ -84,26 +88,35 @@ const PurchaseInvoice = () => {
       if (newInvoice.id) {
         // Update existing invoice
         response = await axios.put(
-          `/api/purchases/${newInvoice.id}`,
-          invoiceData
+          `http://127.0.0.1:8000/api/purchases/${newInvoice.id}`,
+          invoiceData,
+          {
+            headers: {
+              Authorization: `Bearer ${currentUser.token}`,
+              "Content-Type": "application/json",
+            },
+          }
         );
-        setNotification("Purchase invoice updated successfully!");
+        toast.success("Purchase invoice updated successfully!");
       } else {
         // Create new invoice
-        response = await axios.post("/api/purchases", invoiceData);
-        setNotification("Purchase invoice recorded successfully!");
+        response = await axios.post(
+          "http://127.0.0.1:8000/api/purchases",
+          invoiceData,
+          {
+            headers: {
+              Authorization: `Bearer ${currentUser.token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        toast.success("Purchase invoice recorded successfully!");
       }
       fetchInvoices();
       setIsModalOpen(false);
       setEditingInvoice(null);
     } catch (error) {
-      const errorMsg = error.response?.data?.message || error.message;
-      setNotification(`Error saving invoice: ${errorMsg}`);
-      console.error("Save invoice error:", {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message,
-      });
+      handleApiError(error, "Error saving invoice");
     } finally {
       setLoading(false);
     }
@@ -127,7 +140,7 @@ const PurchaseInvoice = () => {
       status: invoice.status,
       items: invoice.items.map((item, index) => ({
         id: `${invoice.id}-${index}`,
-        productId: item.product_id, // Match products.product_id
+        productId: item.product_id,
         description: item.product?.product_name || "Unknown",
         quantity: item.quantity,
         freeItems: 0, // Not stored in backend
@@ -148,17 +161,16 @@ const PurchaseInvoice = () => {
       return;
     try {
       setLoading(true);
-      await axios.delete(`/api/purchases/${id}`);
-      setInvoices(invoices.filter((inv) => inv.id !== id));
-      setNotification("Invoice deleted successfully!");
-    } catch (error) {
-      const errorMsg = error.response?.data?.message || error.message;
-      setNotification(`Error deleting invoice: ${errorMsg}`);
-      console.error("Delete invoice error:", {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message,
+      await axios.delete(`http://127.0.0.1:8000/api/purchases/${id}`, {
+        headers: {
+          Authorization: `Bearer ${currentUser.token}`,
+          "Content-Type": "application/json",
+        },
       });
+      setInvoices(invoices.filter((inv) => inv.id !== id));
+      toast.success("Invoice deleted successfully!");
+    } catch (error) {
+      handleApiError(error, "Error deleting invoice");
     } finally {
       setLoading(false);
     }
@@ -183,7 +195,7 @@ const PurchaseInvoice = () => {
           <button
             onClick={() => setIsModalOpen(true)}
             className="inline-flex items-center px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md shadow transition duration-300"
-            disabled={loading}
+            disabled={loading || !currentUser}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -200,19 +212,6 @@ const PurchaseInvoice = () => {
             Create Purchase Invoice
           </button>
         </div>
-
-        {/* Notification */}
-        {notification && (
-          <div
-            className={`p-2 mb-4 rounded ${
-              notification.includes("Error")
-                ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-            }`}
-          >
-            {notification}
-          </div>
-        )}
 
         {/* Search Bar */}
         <div className="mb-6">
