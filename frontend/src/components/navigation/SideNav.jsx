@@ -48,6 +48,7 @@ import {
   SquareCheckBig,
   Users,
   BookUser,
+  CalendarCheck,
 } from "lucide-react";
 import { icon } from "@fortawesome/fontawesome-svg-core";
 
@@ -69,7 +70,7 @@ const SideNav = ({ isPosOpen }) => {
       roles: ['admin', 'manager', 'cashier'],
       subItems: [
         { path: "/items", label: "Items", icon: Box, roles: ['admin', 'manager', 'cashier'] },
-        { path: "/expiry", label: "Expiry", icon: Box, roles: ['admin', 'manager', 'cashier'] },
+        { path: "/expiry", label: "Expiry", icon: CalendarCheck, roles: ['admin', 'manager', 'cashier'] },
         { path: "/suppliers", label: "Suppliers", icon: Users, roles: ['admin', 'manager'] },
         { path: "/categories", label: "Categories", icon: Tag, roles: ['admin', 'manager'] },
         { path: "/units", label: "Units", icon: Layers, roles: ['admin', 'manager'] },

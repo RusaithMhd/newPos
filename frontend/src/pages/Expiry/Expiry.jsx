@@ -105,9 +105,6 @@ const Expiry = () => {
                   <th scope="col" className="px-6 py-4 font-semibold tracking-wider">
                     Expiry Date
                   </th>
-                  <th scope="col" className="px-6 py-4 font-semibold tracking-wider">
-                    Actions
-                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -133,14 +130,6 @@ const Expiry = () => {
                       )}`}
                     >
                       {formatDate(item.expiry_date)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <button
-                        onClick={() => handleOpenModal(item.id)}
-                        className="px-4 py-1 text-sm font-medium text-white transition-all duration-300 bg-blue-500 rounded-lg hover:bg-blue-600"
-                      >
-                        View Details
-                      </button>
                     </td>
                   </tr>
                 ))}
