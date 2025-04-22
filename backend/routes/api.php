@@ -104,6 +104,7 @@ Route::middleware(['api', 'auth:api', \App\Http\Middleware\RolePermissionMiddlew
 //     Route::get('/purchases/{id}', [PurchaseController::class, 'show']);
 //     Route::put('/purchases/{id}', [PurchaseController::class, 'update']);
 //     Route::delete('/purchases/{id}', [PurchaseController::class, 'destroy']);
+
 //     // Route::get('/suppliers', [SupplierController::class, 'index']);
 //     // Route::get('/store-locations', [StoreLocationController::class, 'index']);
 //     // Route::get('/products', [ProductController::class, 'index']);
@@ -116,4 +117,10 @@ Route::get('/purchases', [PurchaseController::class, 'index']);
     Route::put('/purchases/{id}', [PurchaseController::class, 'update']);
     Route::delete('/purchases/{id}', [PurchaseController::class, 'destroy']);
 
+
+
+//     Route::get('/suppliers', [SupplierController::class, 'index']);
+//     Route::get('/store-locations', [StoreLocationController::class, 'index']);
+//     Route::get('/products', [ProductController::class, 'index']);
+// });
 
