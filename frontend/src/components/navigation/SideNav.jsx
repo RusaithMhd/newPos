@@ -69,6 +69,7 @@ const SideNav = ({ isPosOpen }) => {
       roles: ['admin', 'manager', 'cashier'],
       subItems: [
         { path: "/items", label: "Items", icon: Box, roles: ['admin', 'manager', 'cashier'] },
+        { path: "/expiry", label: "Expiry", icon: Box, roles: ['admin', 'manager', 'cashier'] },
         { path: "/suppliers", label: "Suppliers", icon: Users, roles: ['admin', 'manager'] },
         { path: "/categories", label: "Categories", icon: Tag, roles: ['admin', 'manager'] },
         { path: "/units", label: "Units", icon: Layers, roles: ['admin', 'manager'] },
@@ -240,12 +241,12 @@ const SideNav = ({ isPosOpen }) => {
 
           }`}
       >
-        <nav className="h-100 mt-20 flex flex-col">
+        <nav className="flex flex-col mt-20 h-100">
           {/* Search Bar */}
-          <div className="p-1 mt-4 border-b dark:border-gray-700 flex items-center">
+          <div className="flex items-center p-1 mt-4 border-b dark:border-gray-700">
             <button
               onClick={toggleNav}
-              className=" p-2  text-slate-800 bg-gray-200 dark:bg-slate-600 rounded-full hover:bg-amber-600 dark:hover:bg-amber-600"
+              className="p-2 bg-gray-200 rounded-full text-slate-800 dark:bg-slate-600 hover:bg-amber-600 dark:hover:bg-amber-600"
               title={isNavVisible ? "Collapse Sidebar" : "Expand Sidebar"}
             >
               {isNavVisible ? <PanelLeftClose size={25} /> : <Menu size={25} />}
@@ -256,11 +257,11 @@ const SideNav = ({ isPosOpen }) => {
                   placeholder="Search..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full p-2 rounded-lg border border-amber-600 dark:border-amber-600 dark:bg-gray-700 dark:text-white"
+                  className="w-full p-2 border rounded-lg border-amber-600 dark:border-amber-600 dark:bg-gray-700 dark:text-white"
                 />
                 <Search
                   size={16}
-                  className="absolute right-3 top-3 text-gray-400 dark:text-gray-500"
+                  className="absolute text-gray-400 right-3 top-3 dark:text-gray-500"
                 />
               </div>
             )}

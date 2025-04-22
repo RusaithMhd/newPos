@@ -78,6 +78,7 @@ import TasksPage from "./pages/TaskManager/TasksPage.jsx";
 import TaskForm from "./components/TaskManager/TaskForm.jsx";
 import ProjectForm from "./components/TaskManager/ProjectForm.jsx";
 import Home from "./components/TaskManager/Home.jsx"
+import Expiry from "./pages/Expiry/Expiry.jsx";
 
 
 // === App Component ===
@@ -137,6 +138,7 @@ function App() {
               >
                 <Route index element={<Dashboard />} />
                 <Route path="items" element={<Items />} />
+                <Route path="expiry" element={<Expiry />} />
                 <Route path="purchasing" element={<PurchasingEntryForm />} />
                 <Route path="sales" element={<Sales />} />
                 <Route path="SalesReturn" element={<SalesReturn />} />
