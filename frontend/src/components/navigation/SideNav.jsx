@@ -61,18 +61,48 @@ const SideNav = ({ isPosOpen }) => {
 
   // Role-based navigation items
   const navItems = [
-    { path: "/dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ['admin', 'manager', 'cashier', 'customer'] },
+    {
+      path: "/dashboard",
+      icon: LayoutDashboard,
+      label: "Dashboard",
+      roles: ["admin", "manager", "cashier", "customer"],
+    },
     {
       path: "/item",
       icon: Package,
       label: "Item",
-      roles: ['admin', 'manager', 'cashier'],
+      roles: ["admin", "manager", "cashier"],
       subItems: [
-        { path: "/items", label: "Items", icon: Box, roles: ['admin', 'manager', 'cashier'] },
-        { path: "/suppliers", label: "Suppliers", icon: Users, roles: ['admin', 'manager'] },
-        { path: "/categories", label: "Categories", icon: Tag, roles: ['admin', 'manager'] },
-        { path: "/units", label: "Units", icon: Layers, roles: ['admin', 'manager'] },
-        { path: "/store-locations", label: "Store Locations", icon: MapPin, roles: ['admin', 'manager'] },
+        {
+          path: "/items",
+          label: "Items",
+          icon: Box,
+          roles: ["admin", "manager", "cashier"],
+        },
+        {
+          path: "/suppliers",
+          label: "Suppliers",
+          icon: Users,
+          roles: ["admin", "manager"],
+        },
+        {
+          path: "/categories",
+          label: "Categories",
+          icon: Tag,
+          roles: ["admin", "manager"],
+        },
+        {
+          path: "/units",
+          label: "Units",
+          icon: Layers,
+          roles: ["admin", "manager"],
+        },
+        {
+          path: "/store-locations",
+          label: "Store Locations",
+          icon: MapPin,
+          roles: ["admin", "manager"],
+        },
         // { path: "/BarcodePage", label: "Barcode", icon: Barcode },
       ],
     },
@@ -80,103 +110,237 @@ const SideNav = ({ isPosOpen }) => {
       path: "/sales",
       icon: ShoppingBag,
       label: "Sales",
-      roles: ['admin', 'manager', 'cashier'],
+      roles: ["admin", "manager", "cashier"],
       subItems: [
-        { path: "/sales", label: "Sales", icon: BadgeDollarSign, roles: ['admin', 'manager', 'cashier'] },
-        { path: "/SalesInvoice", label: "Sales Invoice", icon: ClipboardPen, roles: ['admin', 'manager', 'cashier'] },
-        { path: "/quotation", label: "Quotations", icon: FileText, roles: ['admin', 'manager'] },
-        { path: "/SalesReturn", label: "Sales Return", icon: RefreshCcw, roles: ['admin', 'manager'] },
-        { path: "/Customers", label: "Customers", icon: User, roles: ['admin', 'manager'] },
+        {
+          path: "/sales",
+          label: "Sales",
+          icon: BadgeDollarSign,
+          roles: ["admin", "manager", "cashier"],
+        },
+        {
+          path: "/SalesInvoice",
+          label: "Sales Invoice",
+          icon: ClipboardPen,
+          roles: ["admin", "manager", "cashier"],
+        },
+        {
+          path: "/quotation",
+          label: "Quotations",
+          icon: FileText,
+          roles: ["admin", "manager"],
+        },
+        {
+          path: "/SalesReturn",
+          label: "Sales Return",
+          icon: RefreshCcw,
+          roles: ["admin", "manager"],
+        },
+        {
+          path: "/Customers",
+          label: "Customers",
+          icon: User,
+          roles: ["admin", "manager"],
+        },
       ],
     },
     {
       path: "/purchasing",
       icon: ShoppingCart,
       label: "Purchasing",
-      roles: ['admin', 'manager'],
+      roles: ["admin", "manager"],
       subItems: [
-        { path: "/purchasing", label: "Purchasing", icon: ShoppingBasket, roles: ['admin', 'manager'] },
-        { path: "/PurchaseInvoice", label: "Purchasing Invoice", icon: ClipboardPenLine, roles: ['admin', 'manager'] },
-        { path: "/PurchaseOrder", label: "Purchase Order", icon: FileText, roles: ['admin', 'manager'] },
-        { path: "/PurchaseReturn", label: "Purchase Return", icon: RotateCcw, roles: ['admin', 'manager'] },
+        {
+          path: "/purchasing",
+          label: "Purchasing",
+          icon: ShoppingBasket,
+          roles: ["admin", "manager"],
+        },
+        // { path: "/PurchaseInvoice", label: "Purchasing Invoice", icon: ClipboardPenLine, roles: ['admin', 'manager'] },
+        {
+          path: "/PurchaseOrder",
+          label: "Purchase Order",
+          icon: FileText,
+          roles: ["admin", "manager"],
+        },
+        {
+          path: "/PurchaseReturn",
+          label: "Purchase Return",
+          icon: RotateCcw,
+          roles: ["admin", "manager"],
+        },
       ],
     },
-    { path: "/outstanding", icon: DollarSign, label: "Outstanding", roles: ['admin', 'manager'] },
-    { path: "/ledger", icon: BookOpen, label: "Ledger", roles: ['admin', 'manager'] },
+    {
+      path: "/outstanding",
+      icon: DollarSign,
+      label: "Outstanding",
+      roles: ["admin", "manager"],
+    },
+    {
+      path: "/ledger",
+      icon: BookOpen,
+      label: "Ledger",
+      roles: ["admin", "manager"],
+    },
     {
       path: "/profit",
       icon: FileText,
       label: "Profit",
-      roles: ['admin', 'manager'],
+      roles: ["admin", "manager"],
       subItems: [
-        { path: "/DailyProfit", label: "Daily Profit", icon: TrendingUp, roles: ['admin', 'manager'] },
-        { path: "/BillWiseProfit", label: "Bill Wise Profit", icon: Calendar, roles: ['admin', 'manager'] },
+        {
+          path: "/DailyProfit",
+          label: "Daily Profit",
+          icon: TrendingUp,
+          roles: ["admin", "manager"],
+        },
+        {
+          path: "/BillWiseProfit",
+          label: "Bill Wise Profit",
+          icon: Calendar,
+          roles: ["admin", "manager"],
+        },
         // { path: "/CompanyWiseProfit", label: "Company Wise Profit", icon: FileBarChart, roles: ['admin', 'manager'] },
-        { path: "/SupplierWiseProfit", label: "Supplier Wise Profit", icon: ShoppingCart, roles: ['admin', 'manager'] },
+        {
+          path: "/SupplierWiseProfit",
+          label: "Supplier Wise Profit",
+          icon: ShoppingCart,
+          roles: ["admin", "manager"],
+        },
       ],
     },
     {
       path: "/report",
       icon: BarChart2,
       label: "Reports",
-      roles: ['admin', 'manager'],
+      roles: ["admin", "manager"],
       subItems: [
-        { path: "/StockReport", label: "Stock Reports", icon: BarChart2, roles: ['admin', 'manager'] },
-        { path: "/ItemWiseStockReport", label: "Item Wise Report", icon: FileBarChart, roles: ['admin', 'manager'] },
-        { path: "/StockRecheck", label: "Stock Re-Check", icon: BarChart2, roles: ['admin', 'manager'] },
+        {
+          path: "/StockReport",
+          label: "Stock Reports",
+          icon: BarChart2,
+          roles: ["admin", "manager"],
+        },
+        {
+          path: "/ItemWiseStockReport",
+          label: "Item Wise Report",
+          icon: FileBarChart,
+          roles: ["admin", "manager"],
+        },
+        {
+          path: "/StockRecheck",
+          label: "Stock Re-Check",
+          icon: BarChart2,
+          roles: ["admin", "manager"],
+        },
       ],
     },
     {
       path: "/production",
       icon: Store,
       label: "Production Management",
-      roles: ['admin', 'manager'],
-      subItems: [
-        { path: "/Production", label: "Production", icon: Table },
-      ],
+      roles: ["admin", "manager"],
+      subItems: [{ path: "/Production", label: "Production", icon: Table }],
     },
-    { path: "/Approvels", icon: SettingsIcon, label: "Approvels", icon: ShieldCheck, roles: ['admin'] },
+    {
+      path: "/Approvels",
+      icon: SettingsIcon,
+      label: "Approvels",
+      icon: ShieldCheck,
+      roles: ["admin"],
+    },
 
-    { path: "/StockTransfer", icon: BaggageClaim, label: "StockTransfer", roles: ['admin'] },
+    {
+      path: "/StockTransfer",
+      icon: BaggageClaim,
+      label: "StockTransfer",
+      roles: ["admin"],
+    },
 
-    { path: "/DiscountScheam", icon: BadgePercent, label: "DiscountScheme", roles: ['admin'] },
+    {
+      path: "/DiscountScheam",
+      icon: BadgePercent,
+      label: "DiscountScheme",
+      roles: ["admin"],
+    },
 
     {
       path: "/TaskManager",
       icon: LayoutList,
       label: "Task Management",
-      roles: ['admin', 'manager'],
+      roles: ["admin", "manager"],
       subItems: [
-        { path: "/HomePage", label: "Taskmanager", icon: SquareCheckBig, roles: ['admin', 'manager'] },
-        { path: "/TasksPage", label: "Tasks", icon: SquareCheckBig, roles: ['admin', 'manager'] },
-        { path: "/ProjectsPage", label: "Projects", icon: SquareCheckBig, roles: ['admin', 'manager'] },
-        { path: "/ReportPage", label: "Reports", icon: SquareCheckBig, roles: ['admin', 'manager'] },
-        { path: "/SubtasksPage", label: "Sub Tasks", icon: SquareCheckBig, roles: ['admin', 'manager'] },
+        {
+          path: "/HomePage",
+          label: "Taskmanager",
+          icon: SquareCheckBig,
+          roles: ["admin", "manager"],
+        },
+        {
+          path: "/TasksPage",
+          label: "Tasks",
+          icon: SquareCheckBig,
+          roles: ["admin", "manager"],
+        },
+        {
+          path: "/ProjectsPage",
+          label: "Projects",
+          icon: SquareCheckBig,
+          roles: ["admin", "manager"],
+        },
+        {
+          path: "/ReportPage",
+          label: "Reports",
+          icon: SquareCheckBig,
+          roles: ["admin", "manager"],
+        },
+        {
+          path: "/SubtasksPage",
+          label: "Sub Tasks",
+          icon: SquareCheckBig,
+          roles: ["admin", "manager"],
+        },
       ],
     },
     {
       path: "/Staff",
       icon: Users,
       label: "Staff Management",
-      roles: ['admin'],
+      roles: ["admin"],
       subItems: [
-        { path: "/StaffManagement", label: "Staff Panel", icon: BookUser, roles: ['admin'] },
+        {
+          path: "/StaffManagement",
+          label: "Staff Panel",
+          icon: BookUser,
+          roles: ["admin"],
+        },
       ],
     },
     {
       path: "/UserManagement",
       icon: UserRound,
       label: "User Management",
-      roles: ['admin'],
+      roles: ["admin"],
       subItems: [
         // { path: "/AdminAccess", label: "Admin Panel", roles: ['admin'] },
-        { path: "/RoleList", label: "Roles", icon: Wrench, roles: ['admin'] },
-        { path: "/UserList", label: "Users", icon: Users, userlist: ['admin'] },
-        { path: "/RecycleBin", label: "Recycle Bin", icon: Trash2, recycle: ['admin'] },
+        { path: "/RoleList", label: "Roles", icon: Wrench, roles: ["admin"] },
+        { path: "/UserList", label: "Users", icon: Users, userlist: ["admin"] },
+        {
+          path: "/RecycleBin",
+          label: "Recycle Bin",
+          icon: Trash2,
+          recycle: ["admin"],
+        },
       ],
     },
 
-    { path: "/CreateCompany", icon: Castle, label: "Company", roles: ['admin'] },
+    {
+      path: "/CreateCompany",
+      icon: Castle,
+      label: "Company",
+      roles: ["admin"],
+    },
 
     { path: "/settings", icon: SettingsIcon, label: "Settings" },
   ];
@@ -197,7 +361,11 @@ const SideNav = ({ isPosOpen }) => {
   // Expand menus based on active route
   useEffect(() => {
     navItems.forEach((item) => {
-      if (item.subItems?.some((subItem) => location.pathname.startsWith(subItem.path))) {
+      if (
+        item.subItems?.some((subItem) =>
+          location.pathname.startsWith(subItem.path)
+        )
+      ) {
         setOpenMenus((prev) => ({ ...prev, [item.path]: true }));
       }
     });
@@ -214,11 +382,12 @@ const SideNav = ({ isPosOpen }) => {
   // Search functionality
   useEffect(() => {
     if (searchTerm) {
-      const filtered = navItems.filter((item) =>
-        item.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.subItems?.some((subItem) =>
-          subItem.label.toLowerCase().includes(searchTerm.toLowerCase())
-        )
+      const filtered = navItems.filter(
+        (item) =>
+          item.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.subItems?.some((subItem) =>
+            subItem.label.toLowerCase().includes(searchTerm.toLowerCase())
+          )
       );
       setFilteredItems(filtered);
     } else {
@@ -236,9 +405,7 @@ const SideNav = ({ isPosOpen }) => {
     <div className="flex ">
       <aside
         className={`sticky ml-2 top-0 h-screen overflow-y-auto dark:bg-gray-800 transition-all duration-300 
-          ${isNavVisible ? "w-64" : "w-20"
-
-          }`}
+          ${isNavVisible ? "w-64" : "w-20"}`}
       >
         <nav className="h-100 mt-20 flex flex-col">
           {/* Search Bar */}
@@ -249,7 +416,8 @@ const SideNav = ({ isPosOpen }) => {
               title={isNavVisible ? "Collapse Sidebar" : "Expand Sidebar"}
             >
               {isNavVisible ? <PanelLeftClose size={25} /> : <Menu size={25} />}
-            </button> {isNavVisible && (
+            </button>{" "}
+            {isNavVisible && (
               <div className="relative flex-1">
                 <input
                   type="text"
@@ -269,7 +437,7 @@ const SideNav = ({ isPosOpen }) => {
           {/* Navigation Items */}
           <div className="flex-1 overflow-y-auto">
             {itemsToRender
-              .filter(item => !item.roles || item.roles.includes(user?.role))
+              .filter((item) => !item.roles || item.roles.includes(user?.role))
               .map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname.startsWith(item.path);
@@ -280,13 +448,16 @@ const SideNav = ({ isPosOpen }) => {
                     <Link
                       to={item.subItems ? "#" : item.path}
                       onClick={() => item.subItems && toggleMenu(item.path)}
-                      className={`hover:bg-amber-600 dark:hover:bg-slate-600 flex items-center p-3 rounded-lg cursor-pointer transition-colors duration-100 ${isActive
-                        ? " hover:text-slate-900 text-blue-700  dark:text-amber-600"
-                        : "text-gray-700 hover:text-slate-900 dark:text-gray-400 dark:hover:text-cyan-500"
-                        }`}
+                      className={`hover:bg-amber-600 dark:hover:bg-slate-600 flex items-center p-3 rounded-lg cursor-pointer transition-colors duration-100 ${
+                        isActive
+                          ? " hover:text-slate-900 text-blue-700  dark:text-amber-600"
+                          : "text-gray-700 hover:text-slate-900 dark:text-gray-400 dark:hover:text-cyan-500"
+                      }`}
                     >
                       <Icon size={20} />
-                      {isNavVisible && <span className="ml-3">{item.label}</span>}
+                      {isNavVisible && (
+                        <span className="ml-3">{item.label}</span>
+                      )}
                       {item.subItems && isNavVisible && (
                         <span className="ml-auto">
                           {isMenuOpen ? (
@@ -300,15 +471,19 @@ const SideNav = ({ isPosOpen }) => {
                     {isMenuOpen &&
                       isNavVisible &&
                       item.subItems
-                        ?.filter(subItem => !subItem.roles || subItem.roles.includes(user?.role))
+                        ?.filter(
+                          (subItem) =>
+                            !subItem.roles || subItem.roles.includes(user?.role)
+                        )
                         .map((subItem) => (
                           <Link
                             key={subItem.path}
                             to={subItem.path}
-                            className={`flex items-center ml-8 p-2 rounded-lg transition-colors duration-200 ${location.pathname === subItem.path
-                              ? "bg-amber-500 text-blue-700 dark:bg-blue-800 dark:text-blue-300"
-                              : "text-gray-700 hover:bg-amber-500 dark:text-gray-400 dark:hover:bg-gray-700"
-                              }`}
+                            className={`flex items-center ml-8 p-2 rounded-lg transition-colors duration-200 ${
+                              location.pathname === subItem.path
+                                ? "bg-amber-500 text-blue-700 dark:bg-blue-800 dark:text-blue-300"
+                                : "text-gray-700 hover:bg-amber-500 dark:text-gray-400 dark:hover:bg-gray-700"
+                            }`}
                           >
                             {subItem.icon && <subItem.icon size={16} />}
                             <span className="ml-3">{subItem.label}</span>
